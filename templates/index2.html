@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodTune AI: PlayLists</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+    <!-- Temporary buttons for testing the themes -->
+    
+    <div class="container">
+    <a href="/" class="home-button">Go back to home page</a>
+        <div class="header">
+            <h1>🎵 My Playlist</h1>
+            <p>Discover your favorite tracks</p>
+        </div>
+
+        <div class="emotion-box" id="emotionBox">
+            <div class="emotion-icon">🎭</div>
+            <div class="emotion-content">
+                <h3>This Playlist Suits Your Current Vibe</h3>
+                <p>These carefully curated tracks are perfect for your emotional journey right now - from dreamy reflections to energetic bursts.</p>
+                {% if mood %}
+                <p style="font-weight:bold;">Detected Mood: {{ mood }}</p>
+                {% endif %}
+                {% if error %}
+                <p>{{ error }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if songs %}
+            {% for song in songs %}
+            <div class="song-card">
+                <div class="song-artwork">🎵</div>
+                <div class="song-info">
+                    <div class="song-title">{{ song }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No songs found for this mood.</p>
+        {% endif %}
+
+        <!-- <div class="song-card" onclick="togglePlay(this, 3)">
+            <div class="song-artwork">🎤</div>
+            <div class="song-info">
+                <div class="song-title">Sunset Boulevard</div>
+                <div class="song-artist">Golden Hour</div>
+                <div class="song-duration">5:03</div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <button class="play-button">▶️</button>
+        </div> -->
+
+        <!-- <div class="song-card" onclick="togglePlay(this, 4)">
+            <div class="song-artwork">🎺</div>
+            <div class="song-info">
+                <div class="song-title">Jazz in the Rain</div>
+                <div class="song-artist">Smooth Collective</div>
+                <div class="song-duration">4:37</div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            <button class="play-button">▶️</button>
+        </div> -->
+    </div>
+    <div class="space"></div>
+    <script src="script.js"></script>
+</body>
+</html>

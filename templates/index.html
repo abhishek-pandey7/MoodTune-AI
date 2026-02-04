@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Tune - Mood to Music</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    </head>
+<body>
+    <div class="grid-background"></div>
+    
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">🎵</div>
+                <h1>Mood Tune</h1>
+            </div>
+            <p class="tagline">Transform your emotions into the perfect soundtrack</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            <section class="feature-section">
+                <div class="card voice-card">
+                    <div class="card-header">
+                        <div class="card-icon">🎤</div>
+                        <h3 class="card-title">Voice Your Mood</h3>
+                    </div>
+                    <button id="voiceBtn" class="voice-button">
+                        <img src="{{ url_for('static', filename='microphone-alt (1).png') }}" alt="Microphone icon" class="mic">
+                        <div id="pulseRing" class="pulse-ring"></div>
+                    </button>
+                    <p class="voice-status">Click to start/stop recording</p>
+                    <div id="recordingIndicator" class="recording-indicator">
+                        <div class="recording-dot"></div>
+                        <span>Recording... <span id="countdown">10</span>s</span>
+                    </div>
+                    <!-- Button to go to index2 (songs page) -->
+                    <form action="/generate_songs" method="post" style="margin-top:20px;">
+                        <input type="hidden" name="mood" id="moodInputForSongs" value="">
+                        <button type="submit" class="voice-button">Go to Songs Page</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="feature-section">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">✍️</div>
+                        <h3 class="card-title">Describe Your Vibe</h3>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="textInput" 
+                        class="text-input" 
+                        placeholder="I'm feeling energetic and ready to conquer the world..."
+                    >
+                    <button id="textSubmit" class="submit-button">
+                        Generate My Playlist
+                    </button>
+                </div>
+            </section>
+
+            <section class="feature-section">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🎭</div>
+                        <h3 class="card-title">Quick Mood Picker</h3>
+                    </div>
+                    <div class="mood-grid">
+                        <div class="mood-item" data-mood="joy">
+                            <div class="mood-emoji">😊</div>
+                            <div class="mood-name">Joy</div>
+                        </div>
+                        <div class="mood-item" data-mood="sadness">
+                            <div class="mood-emoji">😢</div>
+                            <div class="mood-name">Sadness</div>
+                        </div>
+                        <div class="mood-item" data-mood="anger">
+                            <div class="mood-emoji">😠</div>
+                            <div class="mood-name">Anger</div>
+                        </div>
+                        <div class="mood-item" data-mood="fear">
+                            <div class="mood-emoji">😨</div>
+                            <div class="mood-name">Fear</div>
+                        </div>
+                        <div class="mood-item" data-mood="surprise">
+                            <div class="mood-emoji">😲</div>
+                            <div class="mood-name">Surprise</div>
+                        </div>
+                        <div class="mood-item" data-mood="love">
+                            <div class="mood-emoji">💕</div>
+                            <div class="mood-name">Love</div>
+                        </div>
+                        <div class="mood-item" data-mood="neutral">
+                            <div class="mood-emoji">😐</div>
+                            <div class="mood-name">Neutral</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section id="resultsSection" class="results-section">
+            <h2 class="results-title">Your Personalized Vibes</h2>
+            <p id="voiceEmotionResult" class="voice-emotion-display"></p>
+            <div id="resultsGrid" class="results-grid">
+                </div>
+        </section>
+    </main>
+
+    <script>
+        let isRecording = false;
+        let recordingTimer;
+        let countdownValue = 10;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Elements
+        const voiceBtn = document.getElementById('voiceBtn');
+        const pulseRing = document.getElementById('pulseRing');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const countdown = document.getElementById('countdown');
+        const textInput = document.getElementById('textInput');
+        const textSubmit = document.getElementById('textSubmit');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const moodItems = document.querySelectorAll('.mood-item');
+        const voicelogo = document.querySelector(".mic");
+        const voiceEmotionResult = document.getElementById('voiceEmotionResult');
+
+
+        // Mood mappings - Updated to use all moods available in Flask's `detect_emotion`
+        const moodData = {
+            joy: [
+                { emoji: '🌟', mood: 'Euphoric', energy: 'Very High' },
+                { emoji: '☀️', mood: 'Cheerful', energy: 'High' },
+                { emoji: '🎉', mood: 'Celebratory', energy: 'High' }
+            ],
+            sadness: [
+                { emoji: '🌧️', mood: 'Melancholic', energy: 'Low' },
+                { emoji: '💙', mood: 'Reflective', energy: 'Low' },
+                { emoji: '🌙', mood: 'Contemplative', energy: 'Medium' }
+            ],
+            anger: [
+                { emoji: '🔥', mood: 'Intense', energy: 'Very High' },
+                { emoji: '⚡', mood: 'Aggressive', energy: 'High' },
+                { emoji: '💢', mood: 'Frustrated', energy: 'High' }
+            ],
+            calmness: [ // New mood mapping for the Flask side
+                { emoji: '🌿', mood: 'Peaceful', energy: 'Low' },
+                { emoji: '🧘', mood: 'Balanced', energy: 'Medium' },
+                { emoji: '🌸', mood: 'Serene', energy: 'Low' }
+            ],
+            fear: [
+                { emoji: '🌊', mood: 'Anxious', energy: 'Medium' },
+                { emoji: '🌫️', mood: 'Uncertain', energy: 'Low' },
+                { emoji: '❄️', mood: 'Tense', energy: 'Medium' }
+            ],
+            disgust: [ // New mood mapping for the Flask side
+                { emoji: '🤢', mood: 'Repulsed', energy: 'Medium' },
+                { emoji: '🤮', mood: 'Aversive', energy: 'High' },
+                { emoji: '🪨', mood: 'Dismayed', energy: 'Medium' }
+            ],
+            surprise: [
+                { emoji: '✨', mood: 'Amazed', energy: 'High' },
+                { emoji: '🎆', mood: 'Excited', energy: 'Very High' },
+                { emoji: '🌈', mood: 'Delighted', energy: 'High' }
+            ],
+            love: [
+                { emoji: '💖', mood: 'Romantic', energy: 'Medium' },
+                { emoji: '🌹', mood: 'Passionate', energy: 'High' },
+                { emoji: '💫', mood: 'Dreamy', energy: 'Medium' }
+            ],
+            neutral: [
+                { emoji: '🌿', mood: 'Peaceful', energy: 'Low' },
+                { emoji: '🧘', mood: 'Balanced', energy: 'Medium' },
+                { emoji: '🌸', mood: 'Serene', energy: 'Low' }
+            ]
+        };
+
+        // Voice recording logic
+        voiceBtn.addEventListener('click', toggleRecording);
+
+        async function startRecording() {
+            if (!navigator.mediaDevices) {
+                alert("Your browser doesn't support media devices (microphone).");
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    // Stop the stream tracks after recording ends
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Proceed to send the audio to the backend
+                    sendAudioToServer(audioChunks);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                countdownValue = 10;
+                voiceEmotionResult.textContent = ''; // Clear previous result
+                
+                pulseRing.classList.add('active');
+                recordingIndicator.classList.add('active');
+                voicelogo.src = "{{ url_for('static', filename='pause-circle.png') }}";
+                
+                // Start countdown
+                recordingTimer = setInterval(() => {
+                    countdownValue--;
+                    countdown.textContent = countdownValue;
+                    
+                    if (countdownValue <= 0) {
+                        stopRecording();
+                    }
+                }, 1000);
+
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("Error: Could not access microphone. Please check your permissions.");
+                isRecording = false;
+                pulseRing.classList.remove('active');
+                voicelogo.src = "{{ url_for('static', filename='microphone-alt (1).png') }}";
+            }
+        }
+
+        function stopRecording() {
+            if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            clearInterval(recordingTimer);
+            
+            pulseRing.classList.remove('active');
+            recordingIndicator.classList.remove('active');
+            voicelogo.src = "{{ url_for('static', filename='microphone-alt (1).png') }}";
+            // The rest of the process (sending to server and showing results) happens in mediaRecorder.onstop
+        }
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        async function sendAudioToServer(chunks) {
+            const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('audio_blob', audioBlob, 'recording.webm');
+
+            // Temporarily show a processing message
+            voiceEmotionResult.textContent = 'Processing voice...';
+            resultsGrid.innerHTML = '';
+            resultsSection.classList.add('show');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const response = await fetch('/upload_audio', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const detectedMood = data.emotion;
+                    voiceEmotionResult.innerHTML = `**Detected Mood:** <span style="color: var(--primary-color);">${detectedMood}</span>`;
+                    // Set mood for song generation form
+                    document.getElementById('moodInputForSongs').value = detectedMood;
+                    // Map Flask emotion result to JS moodData key (convert to lowercase)
+                    const moodKey = detectedMood.toLowerCase();
+                    showMoodResults(moodKey);
+                } else {
+                    voiceEmotionResult.textContent = `Error: ${data.message}`;
+                    resultsGrid.innerHTML = '';
+                }
+
+            } catch (error) {
+                console.error('Upload Error:', error);
+                voiceEmotionResult.textContent = 'Network Error. Could not connect to server.';
+                resultsGrid.innerHTML = '';
+            }
+        }
+
+        // Text input (unchanged from original)
+        textSubmit.addEventListener('click', handleTextSubmit);
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleTextSubmit();
+            }
+        });
+
+        async function handleTextSubmit() {
+            const text = textInput.value.trim();
+            if (text) {
+                textInput.value = '';
+                voiceEmotionResult.textContent = 'Processing text...';
+                resultsGrid.innerHTML = '';
+                resultsSection.classList.add('show');
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+                try {
+                    const response = await fetch('/process_text', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text_input: text }),
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        const detectedMood = data.emotion;
+                        voiceEmotionResult.innerHTML = `**Detected Mood:** <span style="color: var(--primary-color);">${detectedMood}</span>`;
+                        document.getElementById('moodInputForSongs').value = detectedMood;
+                        const moodKey = detectedMood.toLowerCase();
+                        showMoodResults(moodKey);
+                    } else {
+                        voiceEmotionResult.textContent = `Error: ${data.message}`;
+                        resultsGrid.innerHTML = '';
+                    }
+                } catch (error) {
+                    console.error('Text Submit Error:', error);
+                    voiceEmotionResult.textContent = 'Network Error. Could not connect to server.';
+                    resultsGrid.innerHTML = '';
+                }
+            }
+        }
+
+        // ... (Your existing JavaScript code before mood selection)
+
+// --- Mood selection (UPDATED) ---
+moodItems.forEach(item => {
+    item.addEventListener('click', () => {
+        // Remove selection from all items
+        moodItems.forEach(i => i.classList.remove('selected'));
+        
+        // Add selection to clicked item
+        item.classList.add('selected');
+        
+        // Clear voice result before showing quick pick results
+        voiceEmotionResult.textContent = ''; 
+        
+        // Send the selected mood to the backend
+        const mood = item.dataset.mood;
+        sendMoodToServer(mood);
+    });
+});
+
+async function sendMoodToServer(moodType) {
+    // Show loading state
+    voiceEmotionResult.textContent = `Finding music for ${moodType.toUpperCase()}...`;
+    resultsGrid.innerHTML = '';
+    resultsSection.classList.add('show');
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+    try {
+        const response = await fetch('/quick_mood', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mood: moodType }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const detectedMood = data.emotion;
+            // Display the result from the backend
+            voiceEmotionResult.innerHTML = `**Quick Pick Mood:** <span style="color: var(--primary-color);">${detectedMood}</span>`;
+            // Set mood for song generation form
+            document.getElementById('moodInputForSongs').value = detectedMood;
+            // Use the result (lower-cased key) to display matching frontend data
+            const moodKey = detectedMood.toLowerCase();
+            showMoodResults(moodKey);
+        } else {
+            voiceEmotionResult.textContent = `Error: ${data.message}`;
+            resultsGrid.innerHTML = '';
+        }
+
+    } catch (error) {
+        console.error('Mood Submission Error:', error);
+        voiceEmotionResult.textContent = 'Network Error. Could not connect to server.';
+        resultsGrid.innerHTML = '';
+    }
+}
+
+
+function showMoodResults(moodType) {
+    const results = moodData[moodType] || moodData.neutral; // Fallback to 'neutral' for unknown/new moods
+    displayResults(results);
+}
+
+// ... (The rest of your script: showRandomResults, displayResults)
+
+        function showRandomResults() {
+            const moods = Object.keys(moodData);
+            const randomMood = moods[Math.floor(Math.random() * moods.length)];
+            showMoodResults(randomMood);
+        }
+
+        function displayResults(results) {
+            resultsGrid.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.style.animationDelay = `${index * 0.2}s`;
+                
+                card.innerHTML = `
+                    <div class="result-emoji">${result.emoji}</div>
+                    <div class="result-mood">${result.mood}</div>
+                    <div class="result-energy">Energy: ${result.energy}</div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.result-card').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+                    card.classList.add('selected');
+                });
+                
+                resultsGrid.appendChild(card);
+            });
+            
+            resultsSection.classList.add('show');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
