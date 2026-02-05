@@ -50,7 +50,6 @@ MOODTUNE/
 │   └── index2.html       # Playlist results page
 │
 ├── vosk-model-small-en-us-0.15/  # Speech recognition model
-├── uploads/              # Temporary audio storage
 ├── app.py                # Flask backend
 ├── emotion_log.txt       # (Optional) logging
 ├── .env                  # API keys (not committed)
