@@ -147,21 +147,6 @@ http://127.0.0.1:5000
 
 ---
 
-## 🧪 Supported Emotions
-
-* Joy
-* Sadness
-* Anger
-* Calmness
-* Fear
-* Disgust
-* Surprise
-* Love
-* Neutral
-
-(Automatically mapped between frontend and backend)
-
----
 
 ## ⚠️ Notes & Limitations
 
@@ -171,14 +156,6 @@ http://127.0.0.1:5000
 
 ---
 
-## 🌱 Future Improvements
-
-* Spotify API integration for real playback
-* User accounts & mood history
-* Multi-language support
-* Emotion confidence scoring
-
----
 
 ## 👨‍💻 Author
 
