@@ -1,39 +1,39 @@
-# 🎵 MoodTune – Mood to Music Web App
+# MoodTune – Mood to Music Web App
 
 MoodTune is an interactive web application that detects a user’s mood from **voice**, **text**, or **manual selection**, and generates a personalized music playlist using **AI-powered emotion detection** and **Gemini song recommendations**.
 
 ---
 
-## ✨ Features
+## Features
 
-* 🎤 **Voice-based mood detection**
+ **Voice-based mood detection**
 
   * Records audio from the browser
   * Converts speech to text using **Vosk**
   * Extracts emotion using **Google Gemini API**
 
-* ✍️ **Text-based mood detection**
+   **Text-based mood detection**
 
   * Users describe their feelings in text
   * Gemini analyzes and returns the dominant emotion
 
-* 🎭 **Quick Mood Picker**
+   **Quick Mood Picker**
 
   * Instantly select a mood (Joy, Sadness, Anger, Love, etc.)
 
-* 🎶 **AI-generated playlists**
+  **AI-generated playlists**
 
   * Generates 5 mood-matching songs dynamically
   * Each request returns a fresh set of recommendations
 
-* 🎨 **Animated & immersive UI**
+   **Animated & immersive UI**
 
   * Particle effects, gradients, glowing cards
   * Emotion-based backgrounds on playlist page
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 MOODTUNE/
@@ -58,7 +58,7 @@ MOODTUNE/
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
 ### 1. Voice Input Flow
 
@@ -90,7 +90,7 @@ MOODTUNE/
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 
@@ -126,7 +126,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Route             | Method | Description             |
 | ----------------- | ------ | ----------------------- |
@@ -138,7 +138,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🎨 Frontend Technologies
+## Frontend Technologies
 
 * HTML5 + CSS3 (Glassmorphism UI)
 * Vanilla JavaScript
@@ -148,7 +148,7 @@ http://127.0.0.1:5000
 ---
 
 
-## ⚠️ Notes & Limitations
+## Notes & Limitations
 
 * Audio recordings are temporary and deleted after processing
 * Requires internet access for Gemini API calls
